@@ -16,7 +16,7 @@ namespace MadsKristensen.AddAnyFile
 {
     public static class ProjectHelpers
     {
-        static DTE2 _dte = AddAnyFilePackage._dte;
+       public static DTE2 _dte = AddAnyFilePackage._dte;
 
         public static string GetRootNamespace(this Project project)
         {

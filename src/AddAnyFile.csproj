@@ -298,6 +298,7 @@
     </Content>
     <None Include="app.config" />
     <None Include="packages.config" />
+    <None Include="settings.json" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
       <Generator>VsixManifestGenerator</Generator>

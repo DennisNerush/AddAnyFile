@@ -77,6 +77,11 @@ namespace MadsKristensen.AddAnyFile
             if (string.IsNullOrEmpty(input))
                 return;
 
+
+            var allProjectsInSolution = Projects();
+            FindMatchingTestProject();
+
+
             string[] parsedInputs = GetParsedInput(input);
 
             foreach (string inputItem in parsedInputs)
@@ -132,6 +137,12 @@ namespace MadsKristensen.AddAnyFile
                     System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
                 }
             }
+        }
+
+        private void FindMatchingTestProject()
+        {
+            
+
         }
 
         private static async Task<int> WriteFile(Project project, string file)
@@ -255,6 +266,63 @@ namespace MadsKristensen.AddAnyFile
             }
 
             return null;
+        }
+
+        public static DTE2 GetActiveIDE()
+        {
+            // Get an instance of currently running Visual Studio IDE.
+            DTE2 dte2 = Package.GetGlobalService(typeof(DTE)) as DTE2;
+            return dte2;
+        }
+
+        public static IList<Project> GetAllProjectsInSolution()
+        {
+            Projects projects = GetActiveIDE().Solution.Projects;
+            List<Project> list = new List<Project>();
+            var item = projects.GetEnumerator();
+            while (item.MoveNext())
+            {
+                var project = item.Current as Project;
+                if (project == null)
+                {
+                    continue;
+                }
+
+                if (project.Kind == ProjectKinds.vsProjectKindSolutionFolder)
+                {
+                    list.AddRange(GetSolutionFolderProjects(project));
+                }
+                else
+                {
+                    list.Add(project);
+                }
+            }
+
+            return list;
+        }
+
+        private static IEnumerable<Project> GetSolutionFolderProjects(Project solutionFolder)
+        {
+            List<Project> list = new List<Project>();
+            for (var i = 1; i <= solutionFolder.ProjectItems.Count; i++)
+            {
+                var subProject = solutionFolder.ProjectItems.Item(i).SubProject;
+                if (subProject == null)
+                {
+                    continue;
+                }
+
+                // If this is another solution folder, do a recursive call, otherwise add
+                if (subProject.Kind == ProjectKinds.vsProjectKindSolutionFolder)
+                {
+                    list.AddRange(GetSolutionFolderProjects(subProject));
+                }
+                else
+                {
+                    list.Add(subProject);
+                }
+            }
+            return list;
         }
     }
 }
