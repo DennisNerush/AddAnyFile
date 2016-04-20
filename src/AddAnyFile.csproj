@@ -181,6 +181,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Transactions" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.XML" />
@@ -298,7 +299,9 @@
     </Content>
     <None Include="app.config" />
     <None Include="packages.config" />
-    <None Include="settings.json" />
+    <None Include="settings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
       <Generator>VsixManifestGenerator</Generator>

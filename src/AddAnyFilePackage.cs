@@ -13,6 +13,7 @@ using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
+using System.Web.Script.Serialization;
 
 namespace MadsKristensen.AddAnyFile
 {
@@ -63,7 +64,8 @@ namespace MadsKristensen.AddAnyFile
             if (item == null)
                 return;
 
-            string folder = FindFolder(item);
+            string currentFilePath = "";
+            string folder = FindFolder(item, out currentFilePath);
 
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
                 return;
@@ -72,15 +74,16 @@ namespace MadsKristensen.AddAnyFile
             if (project == null)
                 return;
 
-            string input = PromptForFileName(folder).TrimStart('/', '\\').Replace("/", "\\");
+            var testProjectData = FindMatchingTestProject(project);
 
-            if (string.IsNullOrEmpty(input))
-                return;
+            //string input = PromptForFileName(folder).TrimStart('/', '\\').Replace("/", "\\");
+
+            //if (string.IsNullOrEmpty(input))
+            //    return;
 
 
-            var allProjectsInSolution = Projects();
-            FindMatchingTestProject();
-
+            var currentRelativePath = GetPathFromProjectFolder(project, currentFilePath);
+            var input = testProjectData.Path +  currentRelativePath;
 
             string[] parsedInputs = GetParsedInput(input);
 
@@ -139,10 +142,36 @@ namespace MadsKristensen.AddAnyFile
             }
         }
 
-        private void FindMatchingTestProject()
+        private string GetPathFromProjectFolder(Project project, string currentFilePath)
         {
-            
+            var projectName = project.Name;
+            var relativeFolder = currentFilePath.Split(new[] { projectName }, StringSplitOptions.RemoveEmptyEntries).Last();
+            var testsFileName = relativeFolder.Replace(".cs","Tests.cs");
 
+            return testsFileName;
+        }
+
+        private TestProjectData FindMatchingTestProject(Project project)
+        {
+            var allProjectsInSolution = GetAllProjectsInSolution();
+
+            using (StreamReader r = new StreamReader("settings.json"))
+            {
+                string json = r.ReadToEnd();
+                var serializer = new JavaScriptSerializer();
+                dynamic parsedJson = serializer.DeserializeObject(json);
+                return new TestProjectData
+                {
+                    Path = parsedJson[project.Name]["path"],
+                    Name = parsedJson[project.Name]["name"],
+                };
+            }
+        }
+
+        private class TestProjectData
+        {
+            public string Name { get; set; }
+            public string Path { get; set; }
         }
 
         private static async Task<int> WriteFile(Project project, string file)
@@ -209,9 +238,10 @@ namespace MadsKristensen.AddAnyFile
             return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
         }
 
-        private static string FindFolder(UIHierarchyItem item)
+        private static string FindFolder(UIHierarchyItem item, out string currentFilePath)
         {
             Window2 window = _dte.ActiveWindow as Window2;
+            currentFilePath = "";
 
             if (window != null && window.Type == vsWindowType.vsWindowTypeDocument)
             {
@@ -223,9 +253,10 @@ namespace MadsKristensen.AddAnyFile
 
                     if (docItem != null)
                     {
-                        string fileName = docItem.Properties.Item("FullPath").Value.ToString();
-                        if (File.Exists(fileName))
-                            return Path.GetDirectoryName(fileName);
+                        currentFilePath = docItem.Properties.Item("FullPath").Value.ToString();
+                        
+                        if (File.Exists(currentFilePath))
+                            return Path.GetDirectoryName(currentFilePath);
                     }
                 }
             }
