@@ -75,7 +75,8 @@ namespace MadsKristensen.AddAnyFile
                 return;
 
             var testProjectData = FindMatchingTestProject(project);
-
+            var allProjects = GetAllProjectsInSolution();
+            var testProject = allProjects.Single(x => x.Name == testProjectData.Name);
             //string input = PromptForFileName(folder).TrimStart('/', '\\').Replace("/", "\\");
 
             //if (string.IsNullOrEmpty(input))
@@ -96,6 +97,7 @@ namespace MadsKristensen.AddAnyFile
                     input = input + "__dummy__";
                 }
 
+                folder = Path.GetDirectoryName(input);
                 string file = Path.Combine(folder, input);
                 string dir = Path.GetDirectoryName(file);
 
@@ -103,11 +105,11 @@ namespace MadsKristensen.AddAnyFile
 
                 if (!File.Exists(file))
                 {
-                    int position = await WriteFile(project, file);
+                    int position = await WriteFile(testProject, file);
 
                     try
                     {
-                        var projectItem = project.AddFileToProject(file);
+                        var projectItem = testProject.AddFileToProject(file);
 
                         if (file.EndsWith("__dummy__"))
                         {
