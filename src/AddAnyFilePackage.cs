@@ -74,17 +74,13 @@ namespace MadsKristensen.AddAnyFile
             if (project == null)
                 return;
 
+            var currentFileRelativePathFromCurrentProject = GetPathFromProjectFolder(project, currentFilePath);
             var testProjectData = FindMatchingTestProject(project);
             var allProjects = GetAllProjectsInSolution();
             var testProject = allProjects.Single(x => x.Name == testProjectData.Name);
-            //string input = PromptForFileName(folder).TrimStart('/', '\\').Replace("/", "\\");
 
-            //if (string.IsNullOrEmpty(input))
-            //    return;
-
-
-            var currentRelativePath = GetPathFromProjectFolder(project, currentFilePath);
-            var input = testProjectData.Path +  currentRelativePath;
+            
+            var input = Path.Combine(Path.GetDirectoryName(testProject.FullName) + testProjectData.Path) +  currentFileRelativePathFromCurrentProject;
 
             string[] parsedInputs = GetParsedInput(input);
 
@@ -97,8 +93,7 @@ namespace MadsKristensen.AddAnyFile
                     input = input + "__dummy__";
                 }
 
-                folder = Path.GetDirectoryName(input);
-                string file = Path.Combine(folder, input);
+                string file = input;
                 string dir = Path.GetDirectoryName(file);
 
                 PackageUtilities.EnsureOutputPath(dir);
@@ -155,8 +150,6 @@ namespace MadsKristensen.AddAnyFile
 
         private TestProjectData FindMatchingTestProject(Project project)
         {
-            var allProjectsInSolution = GetAllProjectsInSolution();
-
             using (StreamReader r = new StreamReader("settings.json"))
             {
                 string json = r.ReadToEnd();
