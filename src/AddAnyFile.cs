@@ -1,7 +1,7 @@
-namespace MadsKristensen.AddAnyFile
+using System;
+
+namespace VSTestGenerator
 {
-    using System;
-    
     /// <summary>
     /// Helper class that exposes all GUIDs used across VS Package.
     /// </summary>

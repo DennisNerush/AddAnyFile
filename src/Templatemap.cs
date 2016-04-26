@@ -1,14 +1,14 @@
-﻿using System.Linq;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
+using VSTestGenerator.Helpers;
 
-namespace MadsKristensen.AddAnyFile
+namespace VSTestGenerator
 {
     static class TemplateMap
     {

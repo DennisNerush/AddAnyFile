@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 
-namespace MadsKristensen.AddAnyFile
+namespace VSTestGenerator
 {
     public partial class FileNameDialog : Window
     {

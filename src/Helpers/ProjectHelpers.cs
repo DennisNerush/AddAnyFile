@@ -12,7 +12,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 
-namespace MadsKristensen.AddAnyFile
+namespace VSTestGenerator.Helpers
 {
     public static class ProjectHelpers
     {

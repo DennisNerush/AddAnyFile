@@ -1,4 +1,4 @@
-namespace MadsKristensen.AddAnyFile
+namespace VSTestGenerator
 {
 	static class Vsix
 	{
