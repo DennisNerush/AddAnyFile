@@ -95,6 +95,7 @@ namespace MadsKristensen.AddAnyFile
 
                     _dte.ExecuteCommand("SolutionExplorer.SyncWithActiveDocument");
                     _dte.ActiveDocument.Activate();
+                    _dte.ExecuteCommand("File.SaveAll");
                 }
                 catch (Exception ex)
                 {
