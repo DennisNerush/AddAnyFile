@@ -18,7 +18,7 @@ See the [changelog](CHANGELOG.md) for updates and roadmap.
 
 A new button is added to the context menu in Solution Explorer.
 
-![Add new file dialog](art/menu.png)
+![Add new file dialog](art/menu1.png)
 
 You can either click that button or use the keybord shortcut **Shift+F2**.
 
