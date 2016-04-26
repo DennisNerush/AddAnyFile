@@ -1,6 +1,6 @@
 ﻿{
-  "Ohio.Web.UI": {
-    "path": "\\Web.UI.Tests",
-    "name": "Ohio.UnitTests"
+  "SourceProjectName": {
+    "path": "\\Path\\In\\TestProject",
+    "name": "ProjectTestsName"
   }
 }

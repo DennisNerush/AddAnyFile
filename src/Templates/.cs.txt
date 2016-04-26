@@ -1,13 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NUnit.Framework;
 
 namespace {namespace}
 {
-    class {itemname}
+	[TestFixture]
+    class {itemname}Tests : AbstractTestFixture
     {
-        $
+		private {itemname} _target;
+
+		public {itemname}() 
+		{
+			_target = new {itemname}();
+		}
+
+		[Test]
+		public void $Method_When_Should()
+		{
+			//arrange
+
+			//act
+
+			//assert
+		}
     }
 }
