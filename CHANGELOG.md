@@ -1,33 +1,16 @@
 # Roadmap
 
-- [ ] Nothing currently on the roadmap
-
-Features that have a checkmark are complete and available for
-download in the
-[nightly build](http://vsixgallery.com/extension/2E78AA18-E864-4FBB-B8C8-6186FC865DB3/).
+- [ ] Support js files
+- [ ] Handle all the edge cases (don't create test to css files etc.)
+- [ ] Automaticly add stubs to all the dependencies
+- [ ] Add Nunit if doesn't exist
+- [ ] Allow to set the base test class if needed
 
 # Changelog
+These are the changes to each version that has been released on the official Visual Studio extension gallery.
 
-These are the changes to each version that has been released
-on the official Visual Studio extension gallery.
+##  1.0
+**2016-04-26**
+- [x] Create test class for current C# class
+- [x] Expose settings.json file to the user
 
-## 3.1
-
-**2016-03-14**
-
-- [x] Added changelog/roadmap
-- [x] Textbox too small with long folder name (#20)
-- [x] C#/VB templates to include folder names (#21)
-
-## 3.0
-
-**2016-03-11**
-
-- [x] New templating engine
-- [x] Templates for C#, VB, HTML and JSON files.
-- [x] File name match template support for:
-  - gulpfile.js
-  - gruntfile.js
-  - bower.json
-  - package.json
-  

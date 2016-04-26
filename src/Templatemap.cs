@@ -23,6 +23,17 @@ namespace VSTestGenerator
             _templateFiles = Directory.GetFiles(_folder, "*" + _defaultExt, SearchOption.AllDirectories);
         }
 
+        public static void CopyDefaultSettingsFile(string destinationPath)
+        {
+            try
+            {
+                File.Copy(Path.Combine(_folder, "settings.json"), destinationPath);
+            }
+            catch (Exception exception)
+            {
+                File.WriteAllText(Path.Combine(destinationPath, "log.txt"), exception.ToString());
+            }
+        }
         public static async Task<string> GetTemplateFilePath(Project project, string file)
         {
             string extension = Path.GetExtension(file).ToLowerInvariant();

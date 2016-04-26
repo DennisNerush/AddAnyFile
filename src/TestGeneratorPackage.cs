@@ -21,9 +21,11 @@ namespace VSTestGenerator
     [InstalledProductRegistration("#110", "#112", Vsix.Version, IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [Guid(PackageGuids.guidAddAnyFilePkgString)]
-    public sealed class AddAnyFilePackage : ExtensionPointPackage
+    public sealed class TestGeneratorPackage : ExtensionPointPackage
     {
         public static DTE2 _dte;
+        public const string VSTestGeneratorDirectory = "VS-Test-Generator";
+
 
         protected override void Initialize()
         {
@@ -41,6 +43,19 @@ namespace VSTestGenerator
                 var menuItem = new OleMenuCommand(MenuItemCallback, menuCommandID);
                 menuItem.BeforeQueryStatus += MenuItem_BeforeQueryStatus;
                 mcs.AddCommand(menuItem);
+
+                var settingsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    VSTestGeneratorDirectory, "settings.json");
+
+                var settingsDirectory = Path.GetDirectoryName(settingsFilePath);
+
+                if (!Directory.Exists(settingsDirectory))
+                    Directory.CreateDirectory(settingsDirectory);
+
+                if (!File.Exists(settingsFilePath))
+                {
+                   TemplateMap.CopyDefaultSettingsFile(settingsFilePath);
+                }
             }
         }
 
@@ -127,7 +142,9 @@ namespace VSTestGenerator
 
         private ProjectData FindMatchingTestProject(Project project)
         {
-            using (StreamReader r = new StreamReader("settings.json"))
+            var settingsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                   VSTestGeneratorDirectory, "settings.json");
+            using (StreamReader r = new StreamReader(settingsFilePath))
             {
                 string json = r.ReadToEnd();
                 var serializer = new JavaScriptSerializer();

@@ -246,15 +246,12 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AddAnyFile.cs">
+    <Compile Include="TestGeneratorPackage1.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>AddAnyFile.vsct</DependentUpon>
+      <DependentUpon>TestGeneratorPackage.vsct</DependentUpon>
     </Compile>
-    <Compile Include="FileNameDialog.xaml.cs">
-      <DependentUpon>FileNameDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="AddAnyFilePackage.cs" />
+    <Compile Include="TestGeneratorPackage.cs" />
     <Compile Include="Helpers\Logger.cs" />
     <Compile Include="Helpers\ProjectHelpers.cs" />
     <Compile Include="Helpers\Telemetry.cs" />
@@ -299,9 +296,10 @@
     </Content>
     <None Include="app.config" />
     <None Include="packages.config" />
-    <None Include="settings.json">
+    <Content Include="Templates\settings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
       <Generator>VsixManifestGenerator</Generator>
@@ -318,23 +316,17 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <VSCTCompile Include="AddAnyFile.vsct">
+    <VSCTCompile Include="TestGeneratorPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
       <Generator>VsctGenerator</Generator>
-      <LastGenOutput>AddAnyFile.cs</LastGenOutput>
+      <LastGenOutput>TestGeneratorPackage1.cs</LastGenOutput>
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\logo.png">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Include="FileNameDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">

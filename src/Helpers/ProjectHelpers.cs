@@ -16,7 +16,7 @@ namespace VSTestGenerator.Helpers
 {
     public static class ProjectHelpers
     {
-       public static DTE2 _dte = AddAnyFilePackage._dte;
+       public static DTE2 _dte = TestGeneratorPackage._dte;
 
         public static string GetRootNamespace(this Project project)
         {
@@ -191,7 +191,7 @@ namespace VSTestGenerator.Helpers
 
         public static IComponentModel GetComponentModel()
         {
-            return (IComponentModel)AddAnyFilePackage.GetGlobalService(typeof(SComponentModel));
+            return (IComponentModel)TestGeneratorPackage.GetGlobalService(typeof(SComponentModel));
         }
     }
 
