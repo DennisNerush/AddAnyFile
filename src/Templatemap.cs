@@ -71,7 +71,7 @@ namespace MadsKristensen.AddAnyFile
                 string content = await reader.ReadToEndAsync();
 
                 return content.Replace("{namespace}", ns)
-                              .Replace("{itemname}", name);
+                              .Replace("{itemname}", name.Replace("Tests", ""));
             }
         }
 
