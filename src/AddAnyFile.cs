@@ -17,6 +17,6 @@ namespace MadsKristensen.AddAnyFile
     /// </summary>
     internal sealed partial class PackageIds
     {
-        public const int cmdidMyCommand = 0x0100;
+        public const int cmdidMyCommand = 666;
     }
 }
