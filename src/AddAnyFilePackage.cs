@@ -5,9 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Interop;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
@@ -50,7 +48,7 @@ namespace MadsKristensen.AddAnyFile
             var button = (OleMenuCommand)sender;
             button.Visible = button.Enabled = false;
 
-            UIHierarchyItem item = GetSelectedItem();
+            UIHierarchyItem item = GetSelectedItemInSolution();
             var project = item.Object as Project;
 
             if (project == null || !project.Kind.Equals(EnvDTE.Constants.vsProjectKindSolutionItems, StringComparison.OrdinalIgnoreCase))
@@ -59,15 +57,9 @@ namespace MadsKristensen.AddAnyFile
 
         private async void MenuItemCallback(object sender, EventArgs e)
         {
-            UIHierarchyItem item = GetSelectedItem();
+            string currentFilePath = GetCurrentFilePath();
 
-            if (item == null)
-                return;
-
-            string currentFilePath = "";
-            string folder = FindFolder(item, out currentFilePath);
-
-            if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+            if (string.IsNullOrEmpty(currentFilePath) || !File.Exists(currentFilePath))
                 return;
 
             Project project = ProjectHelpers.GetActiveProject();
@@ -76,67 +68,50 @@ namespace MadsKristensen.AddAnyFile
 
             var currentFileRelativePathFromCurrentProject = GetPathFromProjectFolder(project, currentFilePath);
             var testProjectData = FindMatchingTestProject(project);
-            var allProjects = GetAllProjectsInSolution();
-            var testProject = allProjects.Single(x => x.Name == testProjectData.Name);
+            var testProject = GetTestProject(testProjectData);
 
-            
-            var input = Path.Combine(Path.GetDirectoryName(testProject.FullName) + testProjectData.Path) +  currentFileRelativePathFromCurrentProject;
+            string file = Path.Combine(Path.GetDirectoryName(testProject.FullName) + testProjectData.Path) + currentFileRelativePathFromCurrentProject;
+            string dir = Path.GetDirectoryName(file);
 
-            string[] parsedInputs = GetParsedInput(input);
+            PackageUtilities.EnsureOutputPath(dir);
 
-            foreach (string inputItem in parsedInputs)
+            if (!File.Exists(file))
             {
-                input = inputItem;
+                int position = await WriteFile(testProject, file);
 
-                if (input.EndsWith("\\", StringComparison.Ordinal))
+                try
                 {
-                    input = input + "__dummy__";
-                }
+                    testProject.AddFileToProject(file);
+                    var window = (Window2)_dte.ItemOperations.OpenFile(file);
 
-                string file = input;
-                string dir = Path.GetDirectoryName(file);
-
-                PackageUtilities.EnsureOutputPath(dir);
-
-                if (!File.Exists(file))
-                {
-                    int position = await WriteFile(testProject, file);
-
-                    try
+                    // Move cursor into position
+                    if (position > 0)
                     {
-                        var projectItem = testProject.AddFileToProject(file);
+                        var view = ProjectHelpers.GetCurentTextView();
 
-                        if (file.EndsWith("__dummy__"))
-                        {
-                            Telemetry.TrackEvent("Folder added");
-                            projectItem.Delete();
-                            continue;
-                        }
-
-                        var window = (Window2)_dte.ItemOperations.OpenFile(file);
-
-                        // Move cursor into position
-                        if (position > 0)
-                        {
-                            var view = ProjectHelpers.GetCurentTextView();
-
-                            if (view != null)
-                                view.Caret.MoveTo(new SnapshotPoint(view.TextBuffer.CurrentSnapshot, position));
-                        }
-
-                        _dte.ExecuteCommand("SolutionExplorer.SyncWithActiveDocument");
-                        _dte.ActiveDocument.Activate();
+                        if (view != null)
+                            view.Caret.MoveTo(new SnapshotPoint(view.TextBuffer.CurrentSnapshot, position));
                     }
-                    catch (Exception ex)
-                    {
-                        Logger.Log(ex);
-                    }
+
+                    _dte.ExecuteCommand("SolutionExplorer.SyncWithActiveDocument");
+                    _dte.ActiveDocument.Activate();
                 }
-                else
+                catch (Exception ex)
                 {
-                    System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
+                    Logger.Log(ex);
                 }
             }
+            else
+            {
+                System.Windows.Forms.MessageBox.Show($"Don't worry KAPARA, already got tests for this file ({0})");
+            }
+        }
+
+        private Project GetTestProject(ProjectData projectData)
+        {
+            var allProjects = GetAllProjectsInSolution();
+
+            return allProjects.Single(x => x.Name == projectData.Name);
         }
 
         private string GetPathFromProjectFolder(Project project, string currentFilePath)
@@ -148,14 +123,14 @@ namespace MadsKristensen.AddAnyFile
             return testsFileName;
         }
 
-        private TestProjectData FindMatchingTestProject(Project project)
+        private ProjectData FindMatchingTestProject(Project project)
         {
             using (StreamReader r = new StreamReader("settings.json"))
             {
                 string json = r.ReadToEnd();
                 var serializer = new JavaScriptSerializer();
                 dynamic parsedJson = serializer.DeserializeObject(json);
-                return new TestProjectData
+                return new ProjectData
                 {
                     Path = parsedJson[project.Name]["path"],
                     Name = parsedJson[project.Name]["name"],
@@ -163,20 +138,10 @@ namespace MadsKristensen.AddAnyFile
             }
         }
 
-        private class TestProjectData
-        {
-            public string Name { get; set; }
-            public string Path { get; set; }
-        }
-
         private static async Task<int> WriteFile(Project project, string file)
         {
             Encoding encoding = new UTF8Encoding(false);
-            string extension = Path.GetExtension(file);
             string template = await TemplateMap.GetTemplateFilePath(project, file);
-
-            var props = new Dictionary<string, string>() { { "extension", extension.ToLowerInvariant() } };
-            Telemetry.TrackEvent("File added", props);
 
             if (!string.IsNullOrEmpty(template))
             {
@@ -190,99 +155,27 @@ namespace MadsKristensen.AddAnyFile
             return 0;
         }
 
-        static string[] GetParsedInput(string input)
-        {
-            // var tests = new string[] { "file1.txt", "file1.txt, file2.txt", ".ignore", ".ignore.(old,new)", "license", "folder/",
-            //    "folder\\", "folder\\file.txt", "folder/.thing", "page.aspx.cs", "widget-1.(html,js)", "pages\\home.(aspx, aspx.cs)",
-            //    "home.(html,js), about.(html,js,css)", "backup.2016.(old, new)", "file.(txt,txt,,)", "file_@#d+|%.3-2...3^&.txt" };
-            Regex pattern = new Regex(@"[,]?([^(,]*)([\.\/\\]?)[(]?((?<=[^(])[^,]*|[^)]+)[)]?");
-            List<string> results = new List<string>();
-            Match match = pattern.Match(input);
-
-            while (match.Success)
-            {
-                // Alwasy 4 matches w. Group[3] being the extension, extension list, folder terminator ("/" or "\"), or empty string
-                string path = match.Groups[1].Value.Trim() + match.Groups[2].Value;
-                string[] extensions = match.Groups[3].Value.Split(',');
-
-                foreach (string ext in extensions)
-                {
-                    string value = path + ext.Trim();
-
-                    // ensure "file.(txt,,txt)" or "file.txt,,file.txt,File.TXT" retuns as just ["file.txt"]
-                    if (value != "" && !value.EndsWith(".", StringComparison.Ordinal) && !results.Contains(value, StringComparer.OrdinalIgnoreCase))
-                    {
-                        results.Add(value);
-                    }
-                }
-                match = match.NextMatch();
-            }
-            return results.ToArray();
-        }
-
-        private string PromptForFileName(string folder)
-        {
-            DirectoryInfo dir = new DirectoryInfo(folder);
-            var dialog = new FileNameDialog(dir.Name);
-
-            var hwnd = new IntPtr(_dte.MainWindow.HWnd);
-            var window = (System.Windows.Window)HwndSource.FromHwnd(hwnd).RootVisual;
-            dialog.Owner = window;
-
-            var result = dialog.ShowDialog();
-            return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
-        }
-
-        private static string FindFolder(UIHierarchyItem item, out string currentFilePath)
+        private string GetCurrentFilePath()
         {
             Window2 window = _dte.ActiveWindow as Window2;
-            currentFilePath = "";
 
-            if (window != null && window.Type == vsWindowType.vsWindowTypeDocument)
+            if (window == null || window.Type != vsWindowType.vsWindowTypeDocument)
+                return string.Empty;
+
+            
+            Document doc = _dte.ActiveDocument;
+            if (doc != null && !string.IsNullOrEmpty(doc.FullName))
             {
-                // if a document is active, use the document's containing directory
-                Document doc = _dte.ActiveDocument;
-                if (doc != null && !string.IsNullOrEmpty(doc.FullName))
-                {
-                    ProjectItem docItem = _dte.Solution.FindProjectItem(doc.FullName);
+                ProjectItem docItem = _dte.Solution.FindProjectItem(doc.FullName);
 
-                    if (docItem != null)
-                    {
-                        currentFilePath = docItem.Properties.Item("FullPath").Value.ToString();
-                        
-                        if (File.Exists(currentFilePath))
-                            return Path.GetDirectoryName(currentFilePath);
-                    }
-                }
+                if (docItem != null)
+                    return docItem.Properties.Item("FullPath").Value.ToString();
             }
 
-            string folder = null;
-
-            ProjectItem projectItem = item.Object as ProjectItem;
-            Project project = item.Object as Project;
-
-            if (projectItem != null)
-            {
-                string fileName = projectItem.FileNames[0];
-
-                if (File.Exists(fileName))
-                {
-                    folder = Path.GetDirectoryName(fileName);
-                }
-                else
-                {
-                    folder = fileName;
-                }
-            }
-            else if (project != null)
-            {
-                folder = project.GetRootFolder();
-            }
-
-            return folder;
+            return string.Empty;
         }
 
-        private static UIHierarchyItem GetSelectedItem()
+        private static UIHierarchyItem GetSelectedItemInSolution()
         {
             var items = (Array)_dte.ToolWindows.SolutionExplorer.SelectedItems;
 
@@ -297,11 +190,11 @@ namespace MadsKristensen.AddAnyFile
         public static DTE2 GetActiveIDE()
         {
             // Get an instance of currently running Visual Studio IDE.
-            DTE2 dte2 = Package.GetGlobalService(typeof(DTE)) as DTE2;
+            DTE2 dte2 = GetGlobalService(typeof(DTE)) as DTE2;
             return dte2;
         }
 
-        public static IList<Project> GetAllProjectsInSolution()
+        private static IList<Project> GetAllProjectsInSolution()
         {
             Projects projects = GetActiveIDE().Solution.Projects;
             List<Project> list = new List<Project>();
@@ -309,19 +202,13 @@ namespace MadsKristensen.AddAnyFile
             while (item.MoveNext())
             {
                 var project = item.Current as Project;
-                if (project == null)
-                {
+                if (project == null) 
                     continue;
-                }
-
+                    
                 if (project.Kind == ProjectKinds.vsProjectKindSolutionFolder)
-                {
                     list.AddRange(GetSolutionFolderProjects(project));
-                }
                 else
-                {
                     list.Add(project);
-                }
             }
 
             return list;
@@ -334,21 +221,22 @@ namespace MadsKristensen.AddAnyFile
             {
                 var subProject = solutionFolder.ProjectItems.Item(i).SubProject;
                 if (subProject == null)
-                {
                     continue;
-                }
-
+                
                 // If this is another solution folder, do a recursive call, otherwise add
                 if (subProject.Kind == ProjectKinds.vsProjectKindSolutionFolder)
-                {
                     list.AddRange(GetSolutionFolderProjects(subProject));
-                }
                 else
-                {
                     list.Add(subProject);
-                }
             }
+
             return list;
+        }
+
+        private class ProjectData
+        {
+            public string Name { get; set; }
+            public string Path { get; set; }
         }
     }
 }
