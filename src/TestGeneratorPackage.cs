@@ -20,7 +20,7 @@ namespace VSTestGenerator
     [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
     [InstalledProductRegistration("#110", "#112", Vsix.Version, IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [Guid(PackageGuids.guidAddAnyFilePkgString)]
+    [Guid(PackageGuids.VSTestGeneratorPkgGuidString)]
     public sealed class TestGeneratorPackage : ExtensionPointPackage
     {
         public static DTE2 _dte;
@@ -39,7 +39,7 @@ namespace VSTestGenerator
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (null != mcs)
             {
-                CommandID menuCommandID = new CommandID(PackageGuids.guidAddAnyFileCmdSet, PackageIds.cmdidMyCommand);
+                CommandID menuCommandID = new CommandID(PackageGuids.VSTestGeneratorCmdSetGuid, PackageIds.cmdidMyCommand);
                 var menuItem = new OleMenuCommand(MenuItemCallback, menuCommandID);
                 menuItem.BeforeQueryStatus += MenuItem_BeforeQueryStatus;
                 mcs.AddCommand(menuItem);
