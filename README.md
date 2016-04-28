@@ -11,6 +11,7 @@ See the [changelog](CHANGELOG.md) for updates and roadmap.
 ### Features
 
 - Easily create test file for the current class
+- Map your source code projects to your Test projects via settings file
 - Set the current class as the target of the test
 - Add Nunit TestFixture attribute
 
@@ -21,6 +22,15 @@ A new button is added to the context menu in Solution Explorer.
 ![Add new file dialog](art/menu1.png)
 
 You can either click that button or use the keybord shortcut **Shift+F2**.
+
+### Settings
+After you install the exytension you need to map your source code projects to their matching test projects.
+    {
+      "SourceProjectName": {
+        "path": "\\Path\\In\\TestProject",
+        "name": "ProjectTestsName"
+      }
+    }    
 
 ### Output
     using System;
