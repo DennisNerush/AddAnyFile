@@ -24,8 +24,8 @@ A new button is added to the context menu in Solution Explorer.
 You can either click that button or use the keybord shortcut **Shift+F2**.
 
 ### Settings
-After you install the exytension you need to map your source code projects to their matching test projects.
- 
+After you install the extension you need to map your source code projects to their matching test projects.
+The file is located at C:\Users\{yourname}\AppData\Roaming\VS-Test-Generator
     // settings.json     
     {
     "SourceProjectName": {
